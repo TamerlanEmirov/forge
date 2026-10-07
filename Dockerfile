@@ -8,8 +8,9 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 WORKDIR /app
 
 # 4) Əvvəl yalnız paket siyahısını kopyala, paketləri qur
+#    --ignore-scripts: Prisma faylları hələ qutuda yoxdur, ona görə postinstall burada işləməsin
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # 5) İndi qalan kodu kopyala
 COPY . .

@@ -7,6 +7,9 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      # Prisma generate üçün yalnız dəyişənin adı lazımdır, real baza yox
+      DATABASE_URL: postgresql://x:x@localhost:5432/x
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
