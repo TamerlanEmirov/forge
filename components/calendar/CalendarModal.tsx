@@ -77,36 +77,28 @@ export function CalendarModal({
   // GET EXERCISES
   // ========================================
 
-  useEffect(() => {
-    if (!open || !workout) return;
+  const workoutId = workout?.id;
 
-    setExercises([]);
+useEffect(() => {
+  if (!open || !workoutId) return;
 
-    const workoutId = workout.id;
+  async function loadExercises() {
+    try {
+      const response = await fetch(`/api/workouts/${workoutId}/exercises`);
 
-    async function loadExercises() {
-      try {
-        const response = await fetch(
-          `/api/workouts/${workoutId}/exercises`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            "Failed to fetch exercises"
-          );
-        }
-
-        const data: WorkoutExercise[] =
-          await response.json();
-
-        setExercises(data);
-      } catch (error) {
-        console.error(error);
+      if (!response.ok) {
+        throw new Error("Failed to fetch exercises");
       }
-    }
 
-    loadExercises();
-  }, [open, workout?.id]);
+      const data: WorkoutExercise[] = await response.json();
+      setExercises(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  void loadExercises();
+}, [open, workoutId]);
 
   // ========================================
   // TOGGLE EXERCISE

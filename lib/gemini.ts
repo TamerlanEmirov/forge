@@ -1,14 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.GEMINI_API_KEY;
+// Açar yoxlaması və client yaratmaq burada, funksiyanın içindədir.
+// Fayl yüklənəndə (məsələn build zamanı) heç nə işləmir,
+// yalnız Gemini həqiqətən çağırılanda açar axtarılır.
+let client: GoogleGenAI | null = null;
 
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not configured");
+function getAI(): GoogleGenAI {
+  if (client) return client;
+
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured");
+  }
+
+  client = new GoogleGenAI({ apiKey });
+  return client;
 }
-
-const ai = new GoogleGenAI({
-  apiKey,
-});
 
 export interface NutritionAnalysis {
   foodName: string;
@@ -21,6 +29,8 @@ export interface NutritionAnalysis {
 export async function analyzeFood(
   foodDescription: string
 ): Promise<NutritionAnalysis> {
+  const ai = getAI();
+
   const prompt = `
 You are a nutrition estimation assistant.
 
@@ -44,7 +54,7 @@ Important rules:
 `;
 
   const response = await ai.models.generateContent({
-   model: "gemini-3.6-flash",
+    model: "gemini-3.6-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -53,55 +63,40 @@ Important rules:
         properties: {
           foodName: {
             type: "string",
-            description:
-              "Short name describing the analyzed food",
+            description: "Short name describing the analyzed food",
           },
 
           calories: {
             type: "number",
-            description:
-              "Estimated calories in kcal",
+            description: "Estimated calories in kcal",
           },
 
           protein: {
             type: "number",
-            description:
-              "Estimated protein in grams",
+            description: "Estimated protein in grams",
           },
 
           carbs: {
             type: "number",
-            description:
-              "Estimated carbohydrates in grams",
+            description: "Estimated carbohydrates in grams",
           },
 
           fats: {
             type: "number",
-            description:
-              "Estimated fats in grams",
+            description: "Estimated fats in grams",
           },
         },
 
-        required: [
-          "foodName",
-          "calories",
-          "protein",
-          "carbs",
-          "fats",
-        ],
+        required: ["foodName", "calories", "protein", "carbs", "fats"],
       },
     },
   });
 
   if (!response.text) {
-    throw new Error(
-      "Gemini returned an empty response"
-    );
+    throw new Error("Gemini returned an empty response");
   }
 
-  const result = JSON.parse(
-    response.text
-  ) as NutritionAnalysis;
+  const result = JSON.parse(response.text) as NutritionAnalysis;
 
   return result;
 }

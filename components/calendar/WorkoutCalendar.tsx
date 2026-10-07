@@ -107,10 +107,44 @@ export function WorkoutCalendar() {
     }
   }
 
-  useEffect(() => {
-    fetchWorkouts();
-  }, []);
+ useEffect(() => {
+  let cancelled = false;
 
+  async function loadWorkouts() {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch("/api/workouts");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch workouts");
+      }
+
+      const data: Workout[] = await response.json();
+
+      if (!cancelled) {
+        setWorkouts(data);
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (!cancelled) {
+        setError("We couldn't load your workouts.");
+      }
+    } finally {
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }
+  }
+
+  loadWorkouts();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
   // --------------------------------
   // HEATMAP
   // --------------------------------
